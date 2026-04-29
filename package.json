@@ -1,14 +1,19 @@
 {
   "name": "gowild-searcher",
-  "version": "1.0.0",
-  "description": "Daily Frontier Airlines GoWild fare searcher",
-  "main": "src/searcher.js",
+  "version": "2.0.0",
+  "description": "Daily Frontier Airlines GoWild fare searcher with web interface",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "search": "node src/searcher.js",
     "schedule": "node src/scheduler.js",
     "test": "node src/searcher.js --test"
   },
   "dependencies": {
+    "next": "^14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "puppeteer": "^21.0.0",
     "node-cron": "^3.0.0",
     "dotenv": "^16.0.0",
@@ -19,7 +24,8 @@
     "frontier",
     "gowild",
     "fares",
-    "travel"
+    "travel",
+    "nextjs"
   ],
   "author": "",
   "license": "MIT"

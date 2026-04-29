@@ -5,6 +5,7 @@ Daily automated tool that searches Frontier Airlines for GoWild fares from your 
 ## Features
 
 - ✅ Searches Frontier.com daily for GoWild fares
+- ✅ **NEW: Web dashboard for manual searches and viewing results**
 - ✅ Two implementations: Python (recommended) or Node.js
 - ✅ Configurable origin airport (default: SLC)
 - ✅ Searches ~300 domestic US airports
@@ -15,6 +16,7 @@ Daily automated tool that searches Frontier Airlines for GoWild fares from your 
 - ✅ Sends daily reports via Slack
 - ✅ Rate-limited to avoid blocking
 - ✅ Logs all searches for history tracking
+- ✅ **Vercel-compatible web interface**
 
 ## Quick Start
 
@@ -32,6 +34,15 @@ python3 gowild_searcher.py
 cd gowild-searcher
 npm install
 npm run search
+```
+
+### Option 3: Web Dashboard (Local Development)
+
+```bash
+cd gowild-searcher
+npm install
+npm run dev
+# Open http://localhost:3000
 ```
 
 ## Configuration
@@ -79,6 +90,24 @@ Runs daily at **6:00 AM Mountain Time**.
 python3 scheduler.py --run-now
 ```
 
+### Web Dashboard
+
+#### Local Development
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
+
+#### Features
+
+- **Manual Search Trigger**: Run searches on-demand with custom dates
+- **View Latest Results**: See the most recent search results with flight details
+- **Search History**: Browse past searches by date
+- **Resend Slack Notifications**: Re-send any search results to Slack
+- **Direct Booking Links**: Click through to Frontier to book immediately
+
 ### Node.js Version
 
 #### One-time Search
@@ -96,6 +125,65 @@ npm run schedule
 # or
 node src/scheduler.js --start
 ```
+
+## 🚀 Deploy to Vercel
+
+### Prerequisites
+
+1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
+2. **GitHub Repository**: Push your code to GitHub
+3. **Python Installed**: Vercel supports Python serverless functions
+
+### Deployment Steps
+
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "Add Next.js web interface"
+   git push origin main
+   ```
+
+2. **Connect to Vercel**
+   - Go to [vercel.com/new](https://vercel.com/new)
+   - Import your GitHub repository
+   - Vercel will auto-detect Next.js
+
+3. **Configure Environment Variables**
+   - No special environment variables needed
+   - Python 3.x is available by default
+
+4. **Deploy**
+   - Click "Deploy"
+   - Vercel will build and deploy your app
+
+5. **Access Dashboard**
+   - Your dashboard will be live at `https://your-project.vercel.app`
+
+### Important Notes
+
+⚠️ **Vercel Serverless Limitations:**
+
+- **Timeout**: API routes have a 60-second timeout (configured in `vercel.json`)
+- **Filesystem**: Results are stored in the `logs/` directory and committed to the repo
+- **Python Dependencies**: The Python searcher requires Playwright, which may need additional setup
+
+### Alternative: Hybrid Approach
+
+For production use, consider:
+
+1. **Host the web UI on Vercel** (read-only access to results)
+2. **Run the Python scheduler on a VPS/home server** (for actual searches)
+3. **Sync results via GitHub commits** or a cloud storage service
+
+Example workflow:
+```bash
+# After each search, commit results
+git add logs/gowild-*.json
+git commit -m "Add search results for $(date +%Y-%m-%d)"
+git push
+```
+
+Vercel will auto-deploy and show the new results.
 
 ## Running as a Service
 
@@ -170,6 +258,14 @@ Daily reports include:
 
 Search results are saved to `logs/gowild-YYYY-MM-DD.json` with full details.
 
+### Web Dashboard
+
+Access at `http://localhost:3000` (local) or your Vercel URL:
+- Real-time search results
+- Historical data browser
+- Manual search trigger
+- Slack notification resend
+
 ## GoWild Fare Restrictions
 
 ⚠️ **Important:** GoWild fares come with restrictions:
@@ -203,6 +299,18 @@ Always verify restrictions on Frontier's website before booking.
 - Check Slack channel name/ID in config
 - Review logs for error messages
 
+### Web dashboard not loading
+
+- Run `npm install` to install Next.js dependencies
+- Check for errors in the browser console
+- Ensure `logs/` directory exists and is readable
+
+### Vercel deployment fails
+
+- Check build logs in Vercel dashboard
+- Ensure `next.config.js` and `vercel.json` are present
+- Verify Node.js version compatibility (18+)
+
 ## Technical Notes
 
 ### Python Version (Recommended)
@@ -216,12 +324,42 @@ Always verify restrictions on Frontier's website before booking.
 - Good alternative if Python not available
 - Requires Node.js 18+
 
+### Web Dashboard (Next.js)
+- Built with Next.js 14 and React 18
+- Serverless-compatible API routes
+- Responsive design for mobile/desktop
+- Real-time data fetching
+
 ### Anti-Detection
-Both versions implement:
+All versions implement:
 - Realistic user agents and headers
 - Rate limiting between requests
 - Proper browser fingerprints
 - Delays to mimic human behavior
+
+## Project Structure
+
+```
+gowild-searcher/
+├── pages/                  # Next.js pages
+│   ├── index.js           # Main dashboard
+│   └── api/               # API routes
+│       ├── search.js      # Trigger manual search
+│       ├── results.js     # Fetch results
+│       └── slack.js       # Resend Slack notifications
+├── lib/                    # Shared utilities
+│   └── results.js         # Results file handling
+├── styles/                 # CSS styles
+│   └── globals.css        # Global styles
+├── logs/                   # Search results (JSON)
+├── gowild_searcher.py     # Python searcher
+├── scheduler.py           # Python scheduler
+├── config.json            # Configuration
+├── package.json           # Node.js dependencies
+├── next.config.js         # Next.js config
+├── vercel.json            # Vercel deployment config
+└── README.md              # This file
+```
 
 ## License
 

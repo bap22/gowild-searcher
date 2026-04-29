@@ -3,4 +3,10 @@ logs/
 .env
 *.log
 .DS_Store
-logs/*.json
+.next/
+dist/
+build/
+*.pyc
+__pycache__/
+.venv/
+venv/
