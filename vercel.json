@@ -1,8 +1,5 @@
 {
-  "version": 2,
-  "env": {
-    "NODE_ENV": "production"
-  },
+  "framework": "nextjs",
   "functions": {
     "pages/api/*.js": {
       "maxDuration": 60
