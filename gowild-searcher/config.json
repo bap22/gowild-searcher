@@ -1,0 +1,33 @@
+{
+  "origin": "SLC",
+  "searchDays": 3,
+  "returnDays": 2,
+  "domesticAirports": [
+    "ATL", "BOS", "BWI", "CLT", "CHI", "CLE", "CVG", "DCA", "DEN", "DFW",
+    "DTW", "EWR", "FLL", "HNL", "HOU", "IAD", "IAH", "JFK", "LAS", "LAX",
+    "LGA", "MCO", "MDW", "MEM", "MIA", "MKE", "MSP", "MSY", "OAK", "ONT",
+    "ORD", "PBI", "PDX", "PHL", "PHX", "PIT", "RDU", "RSW", "SAN", "SEA",
+    "SFO", "SJC", "SLC", "SMF", "STL", "TPA", "ABQ", "ANC", "AUS", "BNA",
+    "BOI", "BUF", "BUR", "CHS", "CMH", "COS", "DAY", "DSM", "ELP", "FAT",
+    "GEG", "GSP", "GRR", "HSV", "IND", "JAX", "KOA", "LIH", "MCI", "MFR",
+    "MHT", "MOB", "MTJ", "MYR", "OKC", "OMA", "ONT", "ORF", "PSP", "PVD",
+    "RNO", "ROC", "SAT", "SAV", "SDF", "SNA", "SYR", "TUS", "TUL", "XNA"
+  ],
+  "slack": {
+    "enabled": true,
+    "channel": "@brett",
+    "webhookUrl": ""
+  },
+  "logging": {
+    "level": "info",
+    "file": "logs/search.log"
+  },
+  "rateLimit": {
+    "delayBetweenRequests": 2000,
+    "delayBetweenAirports": 5000
+  },
+  "browser": {
+    "headless": true,
+    "timeout": 30000
+  }
+}
