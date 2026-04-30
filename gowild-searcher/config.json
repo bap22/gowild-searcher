@@ -22,12 +22,17 @@
     "level": "info",
     "file": "logs/search.log"
   },
+  "retry": {
+    "maxRetries": 3,
+    "baseDelay": 5000,
+    "maxDelay": 30000
+  },
   "rateLimit": {
     "delayBetweenRequests": 2000,
-    "delayBetweenAirports": 5000
+    "delayBetweenAirports": 8000
   },
   "browser": {
     "headless": true,
-    "timeout": 30000
+    "timeout": 60000
   }
 }

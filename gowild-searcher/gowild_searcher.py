@@ -35,6 +35,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Retry configuration
+MAX_RETRIES = config.get('retry', {}).get('maxRetries', 3)
+BASE_DELAY = config.get('retry', {}).get('baseDelay', 5000)  # ms
+MAX_DELAY = config.get('retry', {}).get('maxDelay', 30000)  # ms
+TIMEOUT = config.get('browser', {}).get('timeout', 60000)  # Increased default to 60s
+
 GOWILD_RESTRICTIONS = [
     "GoWild fares are non-refundable and non-transferable",
     "Blackout dates may apply - check specific flights",
@@ -74,20 +80,20 @@ class FrontierSearcher:
         if self.playwright:
             self.playwright.stop()
     
-    def search_route(self, origin, destination, depart_date, return_date):
-        """Search for GoWild fares on a specific route"""
+    def search_route(self, origin, destination, depart_date, return_date, attempt=1):
+        """Search for GoWild fares on a specific route with retry logic"""
         fares = []
         
         try:
-            logger.info(f"Searching {origin} → {destination} for {depart_date}")
+            logger.info(f"Searching {origin} → {destination} for {depart_date} (attempt {attempt}/{MAX_RETRIES})")
             
-            # Navigate to Frontier
+            # Navigate to Frontier with increased timeout
             self.page.goto('https://www.flyfrontier.com/travel/book/', 
                           wait_until='networkidle',
-                          timeout=config.get('browser', {}).get('timeout', 30000))
+                          timeout=TIMEOUT)
             
             # Wait for form to load
-            self.page.wait_for_selector('input[placeholder*="From"], input[name*="origin"]', timeout=10000)
+            self.page.wait_for_selector('input[placeholder*="From"], input[name*="origin"]', timeout=15000)
             
             # Try to fill the form
             try:
@@ -114,9 +120,9 @@ class FrontierSearcher:
                 search_btn = self.page.locator('button[type="submit"], button:has-text("Search")').first
                 search_btn.click()
                 
-                # Wait for results
+                # Wait for results with longer timeout
                 try:
-                    self.page.wait_for_selector('.fare, .price, .flight', timeout=20000)
+                    self.page.wait_for_selector('.fare, .price, .flight', timeout=30000)
                 except PlaywrightTimeout:
                     logger.warning(f"No results for {origin} → {destination}")
                     return []
@@ -125,15 +131,28 @@ class FrontierSearcher:
                 fares = self._extract_fares(origin, destination, depart_date, return_date)
                 
             except Exception as e:
-                logger.error(f"Error filling form for {origin} → {destination}: {e}")
+                error_msg = f"Error filling form for {origin} → {destination}: {e}"
+                logger.error(error_msg)
+                raise  # Re-raise to trigger retry
                 
         except Exception as e:
-            logger.error(f"Error searching {origin} → {destination}: {e}")
+            error_msg = f"Error searching {origin} → {destination}: {e}"
+            logger.error(error_msg)
+            
             # Save screenshot for debugging
             try:
-                self.page.screenshot(path=str(LOG_DIR / f'error-{origin}-{destination}.png'))
+                self.page.screenshot(path=str(LOG_DIR / f'error-{origin}-{destination}-attempt{attempt}.png'))
             except:
                 pass
+            
+            # Retry logic with exponential backoff
+            if attempt < MAX_RETRIES:
+                delay = min(BASE_DELAY * (2 ** (attempt - 1)), MAX_DELAY)
+                logger.info(f"Retrying {origin} → {destination} in {delay/1000:.1f}s...")
+                self.page.wait_for_timeout(delay)
+                return self.search_route(origin, destination, depart_date, return_date, attempt + 1)
+            else:
+                logger.error(f"Max retries reached for {origin} → {destination}, skipping")
         
         return fares
     
@@ -223,12 +242,14 @@ class FrontierSearcher:
         return fares
     
     def search_all_routes(self, depart_date, return_date):
-        """Search all configured routes"""
+        """Search all configured routes with rate limiting and error recovery"""
         all_fares = []
         origin = config['origin']
         airports = config['domesticAirports']
+        failed_routes = []
         
         logger.info(f"Starting search: {origin} to {len(airports)} airports")
+        logger.info(f"Timeout: {TIMEOUT/1000}s, Max retries: {MAX_RETRIES}, Base delay: {BASE_DELAY/1000}s")
         
         for i, destination in enumerate(airports):
             if destination == origin:
@@ -237,12 +258,27 @@ class FrontierSearcher:
             logger.info(f"[{i+1}/{len(airports)}] {origin} → {destination}")
             
             fares = self.search_route(origin, destination, depart_date, return_date)
-            all_fares.extend(fares)
             
-            # Rate limiting
+            if fares:
+                logger.info(f"  ✓ Found {len(fares)} fare(s)")
+                all_fares.extend(fares)
+            else:
+                failed_routes.append(f"{origin}→{destination}")
+            
+            # Rate limiting with randomization to avoid detection
             if i < len(airports) - 1:
-                delay = config.get('rateLimit', {}).get('delayBetweenAirports', 5000)
+                base_delay = config.get('rateLimit', {}).get('delayBetweenAirports', 8000)
+                # Add 20-50% randomization to delay
+                import random
+                jitter = random.uniform(0.2, 0.5)
+                delay = base_delay * (1 + jitter)
+                logger.debug(f"  Waiting {delay/1000:.1f}s before next search...")
                 time.sleep(delay / 1000)
+        
+        if failed_routes:
+            logger.warning(f"Failed routes: {', '.join(failed_routes)}")
+        
+        logger.info(f"Search complete: {len(all_fares)} total fares from {len(airports)-len(failed_routes)-1} successful routes")
         
         return all_fares
 
