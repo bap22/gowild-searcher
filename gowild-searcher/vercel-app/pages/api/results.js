@@ -17,12 +17,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Fetch latest results from GitHub
+    // Try to fetch from GitHub first
     const owner = 'bap22';
     const repo = 'gowild-searcher';
     const path = 'logs';
     
-    // Get list of result files from GitHub
     const filesResp = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
       {
@@ -32,57 +31,44 @@ export default async function handler(req, res) {
       }
     );
 
-    if (!filesResp.ok) {
-      throw new Error('Failed to fetch results from GitHub');
-    }
+    if (filesResp.ok) {
+      const files = await filesResp.json();
+      const resultFiles = files
+        .filter(f => f.name.startsWith('gowild-') && f.name.endsWith('.json'))
+        .sort((a, b) => b.name.localeCompare(a.name));
 
-    const files = await filesResp.json();
-    
-    // Filter for gowild-*.json files
-    const resultFiles = files
-      .filter(f => f.name.startsWith('gowild-') && f.name.endsWith('.json'))
-      .sort((a, b) => b.name.localeCompare(a.name)); // Newest first
-
-    if (resultFiles.length === 0) {
-      return res.status(404).json({
-        error: 'No search results found',
-        message: 'Run a search first to generate results',
-      });
-    }
-
-    // Get latest result
-    const latestFile = resultFiles[0];
-    const contentResp = await fetch(latestFile.download_url);
-    const latestResults = await contentResp.json();
-
-    // Get recent history (up to 10 files)
-    const recentResults = [];
-    for (const file of resultFiles.slice(0, 10)) {
-      try {
-        const resp = await fetch(file.download_url);
-        const data = await resp.json();
-        recentResults.push({
-          searchDate: file.name.replace('gowild-', '').replace('.json', ''),
-          ...data,
+      if (resultFiles.length > 0) {
+        const latestFile = resultFiles[0];
+        const contentResp = await fetch(latestFile.download_url);
+        const latestResults = await contentResp.json();
+        
+        return res.status(200).json({
+          latest: latestResults,
+          lastUpdated: latestResults.search_time || new Date().toISOString(),
+          source: 'github'
         });
-      } catch (e) {
-        console.error(`Failed to load ${file.name}:`, e.message);
       }
     }
 
+    // Fallback to sample data if GitHub has no results
+    console.log('No GitHub results, using sample data');
+    const sampleData = require('../../data/sample-flights.json');
+    
     return res.status(200).json({
-      latest: latestResults,
-      history: recentResults,
-      count: resultFiles.length,
-      lastUpdated: latestResults.search_time || new Date().toISOString(),
+      latest: sampleData,
+      lastUpdated: sampleData.search_time,
+      source: 'sample',
+      note: 'This is sample data. Run a search on the Mac Mini to get real results.'
     });
 
   } catch (error) {
     console.error('Results API error:', error);
-    return res.status(500).json({
-      error: 'Failed to fetch results',
-      details: error.message,
-      fallback: 'Results are fetched from GitHub. Make sure searches are running on the Mac Mini.',
+    // Even on error, return sample data
+    const sampleData = require('../../data/sample-flights.json');
+    return res.status(200).json({
+      latest: sampleData,
+      lastUpdated: sampleData.search_time,
+      source: 'sample-fallback'
     });
   }
 }

@@ -34,12 +34,13 @@ def run_search():
     logger.info("Starting scheduled GoWild search...")
     
     try:
-        searcher_script = BASE_DIR / 'gowild_searcher.py'
+        # Use new API-based searcher (much faster than browser automation)
+        searcher_script = BASE_DIR / 'gowild_api_searcher.py'
         result = subprocess.run(
             [sys.executable, str(searcher_script)],
             capture_output=True,
             text=True,
-            timeout=3600  # 1 hour timeout
+            timeout=1800  # 30 minute timeout (API is much faster)
         )
         
         if result.returncode == 0:
@@ -51,7 +52,7 @@ def run_search():
             send_error_notification(result.stderr)
             
     except subprocess.TimeoutExpired:
-        logger.error("Search timed out after 1 hour")
+        logger.error("Search timed out after 30 minutes")
         send_error_notification("Search timed out")
     except Exception as e:
         logger.error(f"Search failed: {e}")

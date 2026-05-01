@@ -1,0 +1,57 @@
+{
+  "search_time": "2026-05-01T14:00:00.000Z",
+  "origin": "SLC",
+  "flights": [
+    {
+      "origin": "SLC",
+      "destination": "DEN",
+      "date": "2026-05-01",
+      "depart_time": "06:15 AM",
+      "arrive_time": "08:30 AM",
+      "stops": 0,
+      "price": 39,
+      "booking_url": "https://www.flyfrontier.com/travel/book/?o1=SLC&d1=DEN&dd1=2026-05-01%2000:00:00&adt=1&ftype=GW"
+    },
+    {
+      "origin": "SLC",
+      "destination": "LAS",
+      "date": "2026-05-01",
+      "depart_time": "07:45 AM",
+      "arrive_time": "08:15 AM",
+      "stops": 0,
+      "price": 29,
+      "booking_url": "https://www.flyfrontier.com/travel/book/?o1=SLC&d1=LAS&dd1=2026-05-01%2000:00:00&adt=1&ftype=GW"
+    },
+    {
+      "origin": "SLC",
+      "destination": "PHX",
+      "date": "2026-05-01",
+      "depart_time": "09:30 AM",
+      "arrive_time": "10:45 AM",
+      "stops": 0,
+      "price": 35,
+      "booking_url": "https://www.flyfrontier.com/travel/book/?o1=SLC&d1=PHX&dd1=2026-05-01%2000:00:00&adt=1&ftype=GW"
+    },
+    {
+      "origin": "SLC",
+      "destination": "DEN",
+      "date": "2026-05-02",
+      "depart_time": "11:20 AM",
+      "arrive_time": "01:35 PM",
+      "stops": 0,
+      "price": 45,
+      "booking_url": "https://www.flyfrontier.com/travel/book/?o1=SLC&d1=DEN&dd1=2026-05-02%2000:00:00&adt=1&ftype=GW"
+    },
+    {
+      "origin": "SLC",
+      "destination": "MCO",
+      "date": "2026-05-02",
+      "depart_time": "06:00 AM",
+      "arrive_time": "12:30 PM",
+      "stops": 1,
+      "price": 69,
+      "booking_url": "https://www.flyfrontier.com/travel/book/?o1=SLC&d1=MCO&dd1=2026-05-02%2000:00:00&adt=1&ftype=GW"
+    }
+  ],
+  "count": 5
+}
